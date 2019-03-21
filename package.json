@@ -1,0 +1,19 @@
+{
+  "name": "presh-explorer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watchExample": "watchify -d ./example/index.js -o ./example/index.browser.js"
+  },
+  "author": "Kory Nunn <knunn187@gmail.com> (https://korynunn.com)",
+  "license": "ISC",
+  "dependencies": {
+    "fastn": "^2.12.0",
+    "presh": "^1.7.0"
+  },
+  "devDependencies": {
+    "watchify": "^3.11.1"
+  }
+}

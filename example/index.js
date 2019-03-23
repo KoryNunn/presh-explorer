@@ -1,6 +1,6 @@
 var explorer = require('../')()
 
-explorer.source('1 + 2 / foo')
+explorer.source('(1 + 2) / foo')
 explorer.globals({
     foo: 4
 })

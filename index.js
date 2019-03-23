@@ -85,10 +85,25 @@ function renderIdentifier(scope, binding){
     .on('input', onNodeInput(binding));
 }
 
+function renderParentesisGroup(scope, binding){
+    return fastn('div',
+        {
+            class: 'node parenthesis',
+            //contenteditable: fastn.binding('edit').attach(scope),
+            result: titleBinding(scope)
+        },
+        '(',
+        renderNodeList(scope).binding('item'),
+        ')'
+    )
+    .on('input', onNodeInput(binding));
+}
+
 var nodeTypeRenderers = {
     operator: renderOperator,
     number: renderNumber,
-    identifier: renderIdentifier
+    identifier: renderIdentifier,
+    parenthesisGroup: renderParentesisGroup
 };
 
 function renderNode(scope, binding){
@@ -101,14 +116,17 @@ function renderNode(scope, binding){
                 return;
             }
 
+            console.log(token)
+
             return nodeTypeRenderers[token.type](scope, binding);
         }
     })
 }
 
 function renderNodeList(scope){
-    return fastn('list', {
-        items: fastn.binding('tokens|*'),
+    return fastn('list:span', {
+        class: 'content',
+        items: fastn.binding('content|*'),
         template: () => renderNode(scope, fastn.binding('item'))
     })
 }
@@ -122,7 +140,7 @@ module.exports = function(){
         var lexed = lex(data.source);
         var parsed = parse(lexed);
 
-        fastn.Model.set(data, 'tokens', parsed);
+        fastn.Model.set(data, 'content', parsed);
     }
 
     model.on('source', updateTokens);

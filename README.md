@@ -1,6 +1,6 @@
 # Presh explorer
 
-Very alpha, only supports operators, numbers, and identifiers
+Very alpha, only supports operators, numbers, identifiers, and parenthesis
 
 # Usage
 

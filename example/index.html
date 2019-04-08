@@ -10,21 +10,22 @@
         }
 
         .preshExplorer .node {
-            padding: 3px;
-            margin: 3px;
-            /*margin-bottom: 12px;*/
+            padding: 0 3px;
             display: inline-block;
             cursor: pointer;
             position: relative;
+        }
+
+        .preshExplorer .node:not(.literal){
             border: solid 1px rgba(255, 255, 255, 0.2);
         }
 
-        .preshExplorer .node:hover{
+        .preshExplorer .node:not(.literal).active{
             box-shadow: 0 0 1px white;
             margin-bottom: 1em;
         }
 
-        .preshExplorer .node:after, .token:after{
+        .preshExplorer .node:not(.literal):after{
             content: attr(result);
             position: absolute;
             top:100%;
@@ -34,7 +35,7 @@
             opacity: 0;
         }
 
-        .preshExplorer .node:hover:after, .token:hover:after{
+        .preshExplorer .node:not(.literal).active:after{
             opacity: 1;
         }
 
@@ -45,7 +46,7 @@
             position: relative;
         }
 
-        .preshExplorer .identifier:hover {
+        .preshExplorer .identifier.active {
             font-weight: 600;
             margin-bottom: 1em;
         }

@@ -224,11 +224,7 @@ function renderNodeList(fastn, scope, static){
     return fastn('list:span', {
         class: 'content',
         items: fastn.binding('content|*'),
-        template: (model, scope) => {
-            var scope = new Scope(scope.get('_scope'))
-
-            renderNode(fastn, scope, fastn.binding('item', item => ({ ...item, _scope: scope })), static)
-        }
+        template: () => renderNode(fastn, scope, fastn.binding('item'), static)
     })
 }
 

@@ -18,11 +18,9 @@ var explorer = require('../')({
 })
 
 explorer.source(`
-    subtract(a b){ a - b }
-
     (
-        1 / 12 * subtract(7 2) -
-        bar + add(2 4 / 2)
+        1 / 12 *
+        bar + add(2 4 / foo)
     ) / foo
 `)
 var defaultGlobals = {

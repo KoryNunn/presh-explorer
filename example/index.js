@@ -17,10 +17,17 @@ var explorer = require('../')({
     }
 })
 
-explorer.source('(1 + 2) / foo >= 1')
-explorer.globals({
+explorer.source(`
+    (
+        1 / 12 *
+        bar + add(2 4 / foo)
+    ) / foo
+`)
+var defaultGlobals = {
+    add: (a, b) => a + b,
     foo: 4
-})
+};
+explorer.globals(defaultGlobals)
 
 window.addEventListener('load', function(){
     document.body.appendChild(explorer.element)
@@ -28,6 +35,8 @@ window.addEventListener('load', function(){
 
 setInterval(function(){
     explorer.globals({
-        foo: Math.round(Math.random() * 10)
+        ...defaultGlobals,
+        foo: Math.round(Math.random() * 10),
+        bar: Math.round(Math.random() * 10)
     })
 }, 100);

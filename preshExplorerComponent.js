@@ -49,7 +49,6 @@ function onNodeInput(binding){
             scope.set('item.error', error);
             return;
         }
-        console.log(newNode)
         binding(newNode);
     }
 }
@@ -73,8 +72,6 @@ function renderFunctionExpression(fastn, scope, binding, static){
             if(!token){
                 return;
             }
-
-            console.log(token);
 
             return fastn('div',
                 {
@@ -110,8 +107,6 @@ function renderFunctionCall(fastn, scope, binding, static){
                 return;
             }
 
-            console.log(token);
-
             return fastn('div',
                 {
                     class: 'node functionCall',
@@ -119,9 +114,9 @@ function renderFunctionCall(fastn, scope, binding, static){
                     //contenteditable: fastn.binding('edit').attach(scope)
                 },
                 fastn.binding('item.target.name'),
-                '(',
+                fastn('span', { class: 'parenthesis open' }, '('),
                 renderNodeList(fastn, scope, static).binding('item'),
-                ')'
+                fastn('span', { class: 'parenthesis close' },')')
             )
             .on('input', onNodeInput(binding))
             .on('click', onNodeAction(scope, token));

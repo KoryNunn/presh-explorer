@@ -14,20 +14,21 @@ var lex = require('presh/lex');
 var parse = require('presh/parse');
 var execute = require('presh/execute');
 var Scope = require('presh/scope');
+var globals = require('presh/global');
 
 function executeToken(token, data){
     if(!token){
         return;
     }
 
-    var executionResult = execute([token], data.globals);
+    var executionResult = execute([token], { ...globals, ...data.globals });
     if(executionResult.error){
         return executionResult.error;
     }
     var result = executionResult.value;
 
     if(data.resultTransform){
-        result = data.resultTransform(result, token, data.globals);
+        result = data.resultTransform(result, token, { ...globals, ...data.globals });
     }
 
     return result;
@@ -113,6 +114,7 @@ function renderFunctionCall(fastn, scope, binding, static){
                     result: titleBinding(fastn, scope, static),
                     //contenteditable: fastn.binding('edit').attach(scope)
                 },
+                renderNode(fastn, scope, fastn.binding('item.target'), static),
                 fastn.binding('item.target.name'),
                 fastn('span', { class: 'parenthesis open' }, '('),
                 renderNodeList(fastn, scope, static).binding('item'),
@@ -145,6 +147,8 @@ function renderOperator(fastn, scope, binding, static){
                 ' ',
                 fastn('span', { 'class': 'symbol' }, operatorMap[token.operator.name].source),
                 ' ',
+                token.middle && renderNode(fastn, scope, fastn.binding('item.middle'), static),
+                token.middle && ' : ',
                 token.right && renderNode(fastn, scope, fastn.binding('item.right'), static)
             )
             .on('input', onNodeInput(binding))
@@ -176,6 +180,20 @@ function renderIdentifier(fastn, scope, binding, static){
     .on('input', onNodeInput(binding));
 }
 
+function renderPeriod(fastn, scope, binding, static){
+    return fastn('div',
+        {
+            class: 'node period',
+            //contenteditable: fastn.binding('edit').attach(scope),
+            result: titleBinding(fastn, scope, static)
+        },
+        renderNode(fastn, scope, fastn.binding('item.left'), static),
+        '.',
+        renderNode(fastn, scope, fastn.binding('item.right'), static)
+    )
+    .on('input', onNodeInput(binding));
+}
+
 function renderParentesisGroup(fastn, scope, binding, static){
     return fastn('div',
         {
@@ -196,7 +214,8 @@ var nodeTypeRenderers = {
     operator: renderOperator,
     number: renderNumber,
     identifier: renderIdentifier,
-    parenthesisGroup: renderParentesisGroup
+    parenthesisGroup: renderParentesisGroup,
+    period: renderPeriod
 };
 
 function renderNode(fastn, scope, binding, static){

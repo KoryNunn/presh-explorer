@@ -18,10 +18,13 @@ var explorer = require('../')({
 })
 
 explorer.source(`
+math.min(
     (
         1 / 12 *
         bar + add(2 4 / foo)
     ) / foo
+    true ? 2 : 3
+)
 `)
 var defaultGlobals = {
     add: (a, b) => a + b,

@@ -115,7 +115,6 @@ function renderFunctionCall(fastn, scope, binding, static){
                     //contenteditable: fastn.binding('edit').attach(scope)
                 },
                 renderNode(fastn, scope, fastn.binding('item.target'), static),
-                fastn.binding('item.target.name'),
                 fastn('span', { class: 'parenthesis open' }, '('),
                 renderNodeList(fastn, scope, static).binding('item'),
                 fastn('span', { class: 'parenthesis close' },')')

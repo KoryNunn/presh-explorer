@@ -10,7 +10,7 @@
   "author": "Kory Nunn <knunn187@gmail.com> (https://korynunn.com)",
   "license": "ISC",
   "dependencies": {
-    "fastn": "^2.12.0",
+    "fastn": "^2.14.5",
     "presh": "^1.7.0"
   },
   "devDependencies": {

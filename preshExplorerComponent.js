@@ -17,13 +17,13 @@ var Scope = require('presh/scope');
 var globals = require('presh/global');
 
 function executeToken(token, data){
-    if(!token){
+    if(!token || data.edit){
         return;
     }
 
     var executionResult = execute([token], { ...globals, ...data.globals });
     if(executionResult.error){
-        return executionResult.error;
+        return executionResult.error.message;
     }
     var result = executionResult.value;
 
@@ -31,39 +31,60 @@ function executeToken(token, data){
         result = data.resultTransform(result, token, { ...globals, ...data.globals });
     }
 
-    return result;
+    try {
+        return JSON.stringify(result) || String(result);
+    } catch (error) {
+        return String(result);
+    }
 }
 
-function titleBinding(fastn, scope, static){
-    if(static){
+function titleBinding(fastn, scope, isStatic){
+    if(isStatic){
         return;
     }
     return fastn.binding('item|**', fastn.binding('.|**').attach(scope), executeToken)
 }
 
-function onNodeInput(binding){
-    return function(event, scope){
-        var existingNode = scope.get('item');
-        try {
-            var newNode = parse(lex(event.target.textContent))[0];
-        } catch (error) {
-            scope.set('item.error', error);
-            return;
+function getAllTextNodes(target) {
+  if (!target) {
+    return [];
+  }
+
+    return Array.from(target.childNodes).reduce((result, node) => {
+        var nodeType = node.nodeType;
+
+        if (nodeType == 3) {
+            result.push(node);
         }
-        binding(newNode);
+        if (nodeType == 1 || nodeType == 9 || nodeType == 11) {
+            result = result.concat(getAllTextNodes(node));
+        }
+
+        return result;
+    }, []);
+}
+
+function onNodeInput(model, component){
+    return function(event, scope){
+        var newSource = event.target.closest('.preshExplorer').textContent;
+        component.emit('source', newSource);
+        if(event.keyCode === 10 && event.ctrlKey) {
+            event.preventDefault();
+            component.emit('save', newSource);
+        }
     }
 }
 
 function onNodeAction(scope, token){
     return function(event, componentScope) {
-        var nodeAction = scope.get('nodeAction');
-        if(nodeAction){
+        var { nodeAction, edit } = scope.get('.');
+        if(nodeAction && !edit){
             nodeAction(event, this, componentScope, token)
         }
     }
 }
 
-function renderFunctionExpression(fastn, scope, binding, static){
+function renderFunctionExpression(fastn, scope, binding, isStatic){
     return fastn('templater', {
         data: fastn.binding('item'),
         attachTemplates: false,
@@ -77,8 +98,7 @@ function renderFunctionExpression(fastn, scope, binding, static){
             return fastn('div',
                 {
                     class: 'node functionExpression',
-                    result: titleBinding(fastn, scope, static),
-                    //contenteditable: fastn.binding('edit').attach(scope)
+                    result: titleBinding(fastn, scope, isStatic)
                 },
                 fastn.binding('item.identifier.name'),
                 '(',
@@ -91,13 +111,12 @@ function renderFunctionExpression(fastn, scope, binding, static){
                 renderNodeList(fastn, scope, true).binding('item'),
                 '}'
             )
-            .on('input', onNodeInput(binding))
             .on('click', onNodeAction(scope, token));
         }
     })
 }
 
-function renderFunctionCall(fastn, scope, binding, static){
+function renderFunctionCall(fastn, scope, binding, isStatic){
     return fastn('templater', {
         data: fastn.binding('item'),
         attachTemplates: false,
@@ -111,46 +130,42 @@ function renderFunctionCall(fastn, scope, binding, static){
             return fastn('div',
                 {
                     class: 'node functionCall',
-                    result: titleBinding(fastn, scope, static),
-                    //contenteditable: fastn.binding('edit').attach(scope)
+                    result: titleBinding(fastn, scope, isStatic),
                 },
-                renderNode(fastn, scope, fastn.binding('item.target'), static),
+                renderNode(fastn, scope, fastn.binding('item.target'), isStatic),
                 fastn('span', { class: 'parenthesis open' }, '('),
-                renderNodeList(fastn, scope, static).binding('item'),
+                renderNodeList(fastn, scope, isStatic).binding('item'),
                 fastn('span', { class: 'parenthesis close' },')')
             )
-            .on('input', onNodeInput(binding))
             .on('click', onNodeAction(scope, token));
         }
     })
 }
 
-function renderOperator(fastn, scope, binding, static){
+function renderOperator(fastn, scope, binding, isStatic){
     return fastn('templater', {
         data: fastn.binding('item'),
         attachTemplates: false,
         template: (model) => {
             var token = model.get('item');
 
-            if(!token){
+            if(!token || token.type !== 'operator'){
                 return;
             }
 
             return fastn('div',
                 {
                     class: 'node operator',
-                    result: titleBinding(fastn, scope, static),
-                    //contenteditable: fastn.binding('edit').attach(scope)
+                    result: titleBinding(fastn, scope, isStatic),
                 },
-                token.left && renderNode(fastn, scope, fastn.binding('item.left'), static),
+                token.left && renderNode(fastn, scope, fastn.binding('item.left'), isStatic),
                 ' ',
                 fastn('span', { 'class': 'symbol' }, operatorMap[token.operator.name].source),
                 ' ',
-                token.middle && renderNode(fastn, scope, fastn.binding('item.middle'), static),
+                token.middle && renderNode(fastn, scope, fastn.binding('item.middle'), isStatic),
                 token.middle && ' : ',
-                token.right && renderNode(fastn, scope, fastn.binding('item.right'), static)
+                token.right && renderNode(fastn, scope, fastn.binding('item.right'), isStatic)
             )
-            .on('input', onNodeInput(binding))
             .on('click', onNodeAction(scope, token));
         }
     })
@@ -160,48 +175,44 @@ function renderNumber(fastn, scope, binding){
     return fastn('div',
         {
             class: 'literal node',
-            //contenteditable: fastn.binding('edit').attach(scope)
         },
         fastn.binding('item.value')
     )
     .on('input', onNodeInput(binding));
 }
 
-function renderIdentifier(fastn, scope, binding, static){
+function renderIdentifier(fastn, scope, binding, isStatic){
     return fastn('div',
         {
             class: 'node identifier',
-            //contenteditable: fastn.binding('edit').attach(scope),
-            result: titleBinding(fastn, scope, static)
+            result: titleBinding(fastn, scope, isStatic)
         },
         fastn.binding('item.name')
     )
     .on('input', onNodeInput(binding));
 }
 
-function renderPeriod(fastn, scope, binding, static){
+function renderPeriod(fastn, scope, binding, isStatic){
     return fastn('div',
         {
             class: 'node period',
-            //contenteditable: fastn.binding('edit').attach(scope),
-            result: titleBinding(fastn, scope, static)
+            result: titleBinding(fastn, scope, isStatic)
         },
-        renderNode(fastn, scope, fastn.binding('item.left'), static),
+        renderNode(fastn, scope, fastn.binding('item.left'), isStatic),
         '.',
-        renderNode(fastn, scope, fastn.binding('item.right'), static)
+        renderNode(fastn, scope, fastn.binding('item.right'), isStatic)
     )
     .on('input', onNodeInput(binding));
 }
 
-function renderParentesisGroup(fastn, scope, binding, static){
+function renderParentesisGroup(fastn, scope, binding, isStatic){
     return fastn('div',
         {
             class: 'node group',
-            //contenteditable: fastn.binding('edit').attach(scope),
-            result: titleBinding(fastn, scope, static)
+            result: titleBinding(fastn, scope, isStatic)
         },
         fastn('span', { class: 'parenthesis open' }, '('),
-        renderNodeList(fastn, scope, static).binding('item'),
+        renderNodeList(fastn, scope, isStatic).binding('item'),
         fastn('span', { class: 'parenthesis close' }, ')')
     )
     .on('input', onNodeInput(binding));
@@ -217,9 +228,10 @@ var nodeTypeRenderers = {
     period: renderPeriod
 };
 
-function renderNode(fastn, scope, binding, static){
+function renderNode(fastn, scope, binding, isStatic){
     return fastn('templater', {
         data: binding,
+
         template: (model) => {
             var token = model.get('item');
 
@@ -227,17 +239,17 @@ function renderNode(fastn, scope, binding, static){
                 return;
             }
 
-            return nodeTypeRenderers[token.type](fastn, scope, binding, static)
+            return nodeTypeRenderers[token.type](fastn, scope, binding, isStatic)
                 .on('click', onNodeAction(scope, token));
         }
     })
 }
 
-function renderNodeList(fastn, scope, static){
+function renderNodeList(fastn, scope, isStatic){
     return fastn('list:span', {
         class: 'content',
         items: fastn.binding('content|*'),
-        template: () => renderNode(fastn, scope, fastn.binding('item'), static)
+        template: () => renderNode(fastn, scope, fastn.binding('item'), isStatic)
     })
 }
 
@@ -247,6 +259,7 @@ module.exports = function(fastn, component, type, settings, children, createInte
     component.extend('_generic', settings, children);
 
     var { binding, model } = createInternalScope({
+        edit: false,
         resultTransform: null,
         nodeAction: null,
         content: [],
@@ -263,10 +276,18 @@ module.exports = function(fastn, component, type, settings, children, createInte
 
     model.on('source', updateTokens);
 
-    component.insert(renderNodeList(fastn, model).attach(model));
+    component.insert(
+        fastn('div', {
+            contenteditable: binding('edit', edit => 
+                edit || undefined
+            )
+        },
+        renderNodeList(fastn, model).attach(model)
+    ));
     component.on('render', () => {
         component.element.classList.add('preshExplorer');
-    });
+    })
+    .on('keypress', onNodeInput(model, component));
 
     return component;
 }

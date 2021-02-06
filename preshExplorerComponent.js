@@ -228,7 +228,7 @@ var nodeTypeRenderers = {
     identifier: renderIdentifier,
     parenthesisGroup: renderParentesisGroup,
     period: renderPeriod,
-    string: renderPeriod
+    string: renderString
 };
 
 function renderNode(fastn, scope, binding, isStatic){

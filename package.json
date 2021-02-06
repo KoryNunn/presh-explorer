@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "fastn": "^2.14.5",
-    "presh": "^1.7.0"
+    "presh": "^3.0.2"
   },
   "devDependencies": {
     "watchify": "^3.11.1"

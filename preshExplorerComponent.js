@@ -170,7 +170,7 @@ function renderOperator(fastn, scope, binding, isStatic){
 function renderNumber(fastn, scope, binding){
     return fastn('div',
         {
-            class: 'literal node',
+            class: 'node literal',
         },
         fastn.binding('item.value')
     );
@@ -210,6 +210,16 @@ function renderParentesisGroup(fastn, scope, binding, isStatic){
     );
 }
 
+function renderString(fastn, scope, binding, isStatic){
+    return fastn('div',
+        {
+            class: 'node literal',
+            result: titleBinding(fastn, scope, isStatic)
+        },
+        fastn.binding('item.sourceToken.source')
+    );
+}
+
 var nodeTypeRenderers = {
     functionExpression: renderFunctionExpression,
     functionCall: renderFunctionCall,
@@ -217,7 +227,8 @@ var nodeTypeRenderers = {
     number: renderNumber,
     identifier: renderIdentifier,
     parenthesisGroup: renderParentesisGroup,
-    period: renderPeriod
+    period: renderPeriod,
+    string: renderPeriod
 };
 
 function renderNode(fastn, scope, binding, isStatic){

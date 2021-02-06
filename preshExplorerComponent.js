@@ -68,10 +68,6 @@ function onNodeInput(model, component){
     return function(event, scope){
         var newSource = event.target.closest('.preshExplorer').textContent;
         component.emit('source', newSource);
-        if(event.keyCode === 10 && event.ctrlKey) {
-            event.preventDefault();
-            component.emit('save', newSource);
-        }
     }
 }
 
@@ -177,8 +173,7 @@ function renderNumber(fastn, scope, binding){
             class: 'literal node',
         },
         fastn.binding('item.value')
-    )
-    .on('input', onNodeInput(binding));
+    );
 }
 
 function renderIdentifier(fastn, scope, binding, isStatic){
@@ -188,8 +183,7 @@ function renderIdentifier(fastn, scope, binding, isStatic){
             result: titleBinding(fastn, scope, isStatic)
         },
         fastn.binding('item.name')
-    )
-    .on('input', onNodeInput(binding));
+    );
 }
 
 function renderPeriod(fastn, scope, binding, isStatic){
@@ -201,8 +195,7 @@ function renderPeriod(fastn, scope, binding, isStatic){
         renderNode(fastn, scope, fastn.binding('item.left'), isStatic),
         '.',
         renderNode(fastn, scope, fastn.binding('item.right'), isStatic)
-    )
-    .on('input', onNodeInput(binding));
+    );
 }
 
 function renderParentesisGroup(fastn, scope, binding, isStatic){
@@ -214,8 +207,7 @@ function renderParentesisGroup(fastn, scope, binding, isStatic){
         fastn('span', { class: 'parenthesis open' }, '('),
         renderNodeList(fastn, scope, isStatic).binding('item'),
         fastn('span', { class: 'parenthesis close' }, ')')
-    )
-    .on('input', onNodeInput(binding));
+    );
 }
 
 var nodeTypeRenderers = {
@@ -287,7 +279,7 @@ module.exports = function(fastn, component, type, settings, children, createInte
     component.on('render', () => {
         component.element.classList.add('preshExplorer');
     })
-    .on('keypress', onNodeInput(model, component));
+    .on('keyup', onNodeInput(model, component));
 
     return component;
 }
